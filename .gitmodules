@@ -1,0 +1,6 @@
+[submodule "arduino/SEMlibmodule"]
+	path = arduino/SEMlibmodule
+	url = https://github.com/TeddyHut/SEMlibmodule
+[submodule "arduino/SEMlibarduino_m328"]
+	path = arduino/SEMlibarduino_m328
+	url = https://github.com/TeddyHut/SEMlibarduino_m328
