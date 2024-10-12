@@ -3,6 +3,8 @@
 #include <libmodule.h>
 #include <libarduino_m328.h>
 
+#include "appui.h"
+
 // Explicitly instantiate the timer InstanceList to prevent multiple instantiations
 // for different translation units.
 template class libmodule::utility::InstanceList<libmodule::time::TimerBase<1000>>;
@@ -51,18 +53,17 @@ struct DFDpad {
       centre{atod, Centre};
 };
 
-libmodule::Timer1k main_timer;
-libmodule::userio::IC_HD44780 display;
-DFDpad dfdpad;
-libmodule::ui::Dpad dpad;
+void loop() {}
 
 void setup() {
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, false);
     pinMode(10, OUTPUT);
-    digitalWrite(10, false);
+    digitalWrite(10, true);
 
     // Setup Dpad
+    DFDpad dfdpad;
+    libmodule::ui::Dpad dpad;
     libmodule::userio::RapidInput3L1k::Level rapidinput_level_0 = {500, 250};
 	libmodule::userio::RapidInput3L1k::Level rapidinput_level_1 = {1500, 100};
 	libmodule::userio::RapidInput3L1k::Level rapidinput_level_2 = {4000, 35};
@@ -78,9 +79,10 @@ void setup() {
     dpad.centre.set_input(&dfdpad.centre);
 
     // Setup display
-    static uint8_t pins[HD44780Bidirectional::N] = {4, 5, 6, 7};
-    static libarduino_m328::DigitalOut en(9), rw(12), rs(8);
-    static HD44780Bidirectional data_pins(pins);
+    libmodule::userio::IC_HD44780 display;
+    uint8_t pins[HD44780Bidirectional::N] = {4, 5, 6, 7};
+    libarduino_m328::DigitalOut en(9), rw(12), rs(8);
+    HD44780Bidirectional data_pins(pins);
     display.pin.data = &data_pins;
     display.pin.en = &en;
     display.pin.rw = nullptr; //&rw;
@@ -97,46 +99,42 @@ void setup() {
     display << instr::clear_display;
     display << "Line 1\nLine 2";
 
+    // Setup UI
+    ui::Common ui_common{display, dpad};
+    ui::Main ui_main(&ui_common);
+
     // Setup main loop timer
+    libmodule::Timer1k main_timer;
 	main_timer.finished = true;
 	main_timer.start();
 
     // Start timers
     libmodule::time::start_timer_daemons<1000>();
-}
 
-void loop() {
-    if (!main_timer) {
-        sleep_cpu();
-        return;
+    Serial.begin(9600);
+
+    while (true) {
+        if (!main_timer) {
+            sleep_cpu();
+            continue;
+        }
+        main_timer.reset();
+        main_timer = 1000 / 60;
+        main_timer.start();
+
+        dfdpad.atod.cycle_read();
+        dpad.left.update();
+        dpad.right.update();
+        dpad.up.update();
+        dpad.down.update();
+        dpad.centre.update();
+
+        ui_main.update();
+
+        using namespace libmodule::userio::hd;
+
+        if (serialEventRun) serialEventRun();
     }
-    main_timer.reset();
-    main_timer = 1000 / 60;
-    main_timer.start();
-
-    dfdpad.atod.cycle_read();
-    dpad.left.update();
-	dpad.right.update();
-	dpad.up.update();
-	dpad.down.update();
-	dpad.centre.update();
-
-    using namespace libmodule::userio::hd;
-    static int presses = 0;
-
-    display << instr::return_home;
-    presses++;
-    static char const *last_pressed = "None\n";
-    if (dpad.left.get())        last_pressed = "Left  \n";
-    else if (dpad.right.get())  last_pressed = "Right \n";
-    else if (dpad.up.get())     last_pressed = "Up    \n";
-    else if (dpad.down.get())   last_pressed = "Down  \n";
-    else if (dpad.centre.get()) last_pressed = "Centre\n";
-    else presses--;
-    display << last_pressed;
-    char buffer[16];
-    snprintf(buffer, sizeof buffer, "Presses: %d", presses);
-    display << buffer;
 }
 
 uint8_t HD44780Bidirectional::get() const
