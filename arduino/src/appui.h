@@ -155,7 +155,7 @@ void ui::NumberInputDecimal<T>::ui_update() {
         // If we go past max (which includes integer overflow)
         if (next_value > pm_config.max || next_value < m_value) {
             if (pm_config.wrap)
-                next_value -= (pm_config.max - pm_config.min);
+                next_value -= (pm_config.max - pm_config.min) + 1;
                 //next_value = pm_config.min + (next_value - pm_config.min ) % (pm_config.max - pm_config.min);
             else next_value = pm_config.max;
         }
@@ -165,7 +165,7 @@ void ui::NumberInputDecimal<T>::ui_update() {
         // If we go under min (which includes integer underflow)
         if (next_value < pm_config.min || next_value > m_value) {
             if (pm_config.wrap)
-                next_value += (pm_config.max - pm_config.min);
+                next_value += (pm_config.max - pm_config.min) + 1;
             else next_value = pm_config.min;
         }
     }
