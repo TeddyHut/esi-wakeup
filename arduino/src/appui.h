@@ -33,11 +33,11 @@ namespace ui
             // The minimum value
             T min = 0;
             // The maximum value
-            T max = 1000;
+            T max = 100;
             // The position of the decimal point - zero means no decimal point, 1 means 1 digit to right of decimal point.
             uint8_t sig10 = 0;
             // The number of characters for the field including the decimal point
-            uint8_t width = 4;
+            uint8_t width = 3;
             char left_pad = '0';
             bool wrap : 1;
             bool exit_left : 1;
