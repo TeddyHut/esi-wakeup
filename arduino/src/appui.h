@@ -195,29 +195,29 @@ void ui::NumberInputDecimal<T>::ui_update() {
     pm_runinit = false;
 }
 
-template <typename U>
 template <typename T>
-constexpr T ui::NumberInputDecimal<U>::powi(T const base, T const exp)
+template <typename U>
+constexpr U ui::NumberInputDecimal<T>::powi(U const base, U const exp)
 {
-    T res = 1;
-    for(T i = 0; i < exp; i++) res *= base;
+    U res = 1;
+    for(U i = 0; i < exp; i++) res *= base;
     return res;
 }
 
-template <typename U>
 template <typename T>
-constexpr T ui::NumberInputDecimal<U>::log10i(T const p)
+template <typename U>
+constexpr U ui::NumberInputDecimal<T>::log10i(U const p)
 {
     //Cannot take log(0)
     if(p == 0) return 0;
-    T i = 0;
-    for(; p / powi<T>(10, i) > 0; i++);
+    U i = 0;
+    for(; p / powi<U>(10, i) > 0; i++);
     return i - 1;
 }
 
-template <typename U>
 template <typename T>
-constexpr uint8_t ui::NumberInputDecimal<U>::extract_digit10i(T const p, uint8_t const exp)
+template <typename U>
+constexpr uint8_t ui::NumberInputDecimal<T>::extract_digit10i(U const p, uint8_t const exp)
 {
-    return p % powi<T>(10, exp + 1) / powi<T>(10, exp);
+    return p % powi<U>(10, exp + 1) / powi<U>(10, exp);
 }
