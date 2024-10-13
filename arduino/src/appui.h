@@ -72,6 +72,36 @@ namespace ui
         static constexpr uint8_t extract_digit10i(U const p, uint8_t const exp);
     };
 
+    /* Left/right: Navigate between fields
+     * Up/down: Adjust digits
+     * Select: Confirm time
+     */
+
+    class TimeEdit : public Screen<Common>
+    {
+    public:
+        TimeEdit(uint8_t const ddbase, tm const &initial, bool const blink_cursor = true);
+
+        tm m_time;
+    protected:
+        void ui_update() override;
+
+    private:
+        using NumberIn_t = NumberInputDecimal<uint8_t>;
+        enum class State : uint8_t {
+            None,
+            Hours,
+            Minutes,
+            Seconds,
+            Exit,
+        } pm_state = State::None;
+
+        NumberIn_t &activeinput;
+        uint8_t pm_activeinput_storage[sizeof(NumberIn_t)];
+        uint8_t const pm_ddbase;
+        bool const pm_blink_cursor;
+    };
+
     /* Top-level Screen
 	 */
 	class Main : public Screen<Common> {
