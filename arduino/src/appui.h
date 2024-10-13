@@ -42,6 +42,7 @@ namespace ui
             bool wrap : 1;
             bool exit_left : 1;
             bool exit_right : 1;
+            bool blink_cursor : 1;
         };
         enum class ExitMode : uint8_t {
             None,
@@ -108,7 +109,7 @@ void ui::NumberInputDecimal<T>::ui_update() {
     if (pm_runinit) {
         ui_common->display << hd::instr::entry_mode_set << hd::entry_mode_set::cursormove_left << hd::entry_mode_set::displayshift_disable;
         restore_cursor_position();
-        ui_common->display << hd::display_power::cursor_on << hd::display_power::cursorblink_on << hd::display_power::display_on;
+        ui_common->display << hd::display_power::cursor_on << (pm_config.blink_cursor ? hd::display_power::cursorblink_on : hd::display_power::cursorblink_off) << hd::display_power::display_on;
     }
 
     // Move cursor if left/right are pressed
@@ -189,7 +190,7 @@ void ui::NumberInputDecimal<T>::ui_update() {
             ui_common->display << hd::instr::write << c;
         }
         restore_cursor_position();
-        ui_common->display << hd::display_power::cursor_on << hd::display_power::cursorblink_on << hd::display_power::display_on;
+        ui_common->display << hd::display_power::cursor_on << (pm_config.blink_cursor ? hd::display_power::cursorblink_on : hd::display_power::cursorblink_off) << hd::display_power::display_on;
     }
     pm_runinit = false;
 }
