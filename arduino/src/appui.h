@@ -15,6 +15,68 @@ namespace ui
         const char *now_isotime;
     };
 
+    class FocusElement;
+
+    class FocusManager {
+        virtual bool is_child_visible(FocusElement const *child) const = 0;
+        virtual bool is_child_focused(FocusElement const *child) const = 0;
+        virtual void child_pull_focus(FocusElement const *child) = 0;
+        virtual void child_release_focus(FocusElement const *child) = 0;
+
+        friend FocusElement;
+    };
+
+    class FocusElement {
+    public:
+        // calls parent::is child visible
+        bool is_visible() const;
+        // calls parent:: is child focused
+        bool is_focused() const;
+        // calls parent::chiold_pull_focus
+        void pull_focus();
+        // calsl parent::child_release_focus
+        void release_focus();
+        // Called if visible changes (maybe a bad idea, getting more spaghetti likes)
+        virtual void on_visible_changed(bool const visible); // this maybe should be protected/private with a friend
+    protected:
+        FocusElement(FocusManager *parent);
+    private:
+        FocusManager *parent;
+    };
+
+    class FocusScreen : public Screen<Common>, public FocusElement {
+    protected:
+        FocusScreen(FocusManager *parent);
+    };
+
+    /* List of screeen.
+     * Navigation:
+     *  up: Next screen
+     *  down: Previous screen
+     *  
+     */
+    /* Wnat: if list item spawns child then don't call list item ui_update for that itme. So should call ui_management_update of list items from screenlist. When an element is focused up/down no longer navigate until focus released.*/
+    class ScreenList : public Screen<Common>, public FocusManager {
+    public:
+        // Todo: Add vector size as optional constructor parameter so it can be sized correctly on creation
+        ScreenList(bool const delete_screens);
+        libmodule::utility::Vector<FocusScreen *> m_screens;
+    protected:
+        void ui_update() override;
+    private:
+        struct {
+            uint8_t index;
+            bool focused;
+        } pm_childstate{0, false};
+        // Whether to delete elements of m_screens when finished
+        bool const pm_delete_screens : 1;
+
+        bool is_child_visible(FocusElement const *child) const override;
+        bool is_child_focused(FocusElement const *child) const override;
+        void child_pull_focus(FocusElement const *child) override;
+        void child_release_focus(FocusElement const *child) override;
+    };
+
     /* Number input. Upon finishing, result will be stored in m_value.
      * config: The configuration for the number input.
      * default_value: The value to start from when entering the number input.
@@ -104,12 +166,23 @@ namespace ui
         bool const pm_blink_cursor;
     };
 
-    class Clock : public Screen<Common>
+    class Status : public FocusScreen
     {
     public:
+        Status(FocusManager *focus_parent);
+    protected:
+        void on_visible_changed(bool const visible) override;
+    };
+
+    class Clock : public FocusScreen
+    {
+    public:
+        Clock(FocusManager *focus_parent);
     protected:
         void ui_update() override;
         void ui_on_childComplete() override;
+        void on_visible_changed(bool const visible) override;
+
     
     private:
         enum class State : uint8_t {
