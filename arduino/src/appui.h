@@ -11,6 +11,8 @@ namespace ui
     {
         libmodule::userio::IC_HD44780 &display;
         libmodule::ui::Dpad &dpad;
+        tm &now_tm;
+        const char *now_isotime;
     };
 
     /* Number input. Upon finishing, result will be stored in m_value.
