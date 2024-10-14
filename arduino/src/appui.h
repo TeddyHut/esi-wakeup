@@ -104,6 +104,24 @@ namespace ui
         bool const pm_blink_cursor;
     };
 
+    class Clock : public Screen<Common>
+    {
+    public:
+    protected:
+        void ui_update() override;
+        void ui_on_childComplete() override;
+    
+    private:
+        enum class State : uint8_t {
+            None,
+            ShowClock,
+            EditTime,
+            EditDate
+        } pm_state = State::None;
+        // Used to check if need to re-write the time/date to the display
+        time_t pm_previous_time;
+    };
+
     /* Top-level Screen
 	 */
 	class Main : public Screen<Common> {

@@ -1,5 +1,8 @@
 #include "appui.h"
 
+#include <stdio.h>
+#include "sensors.h"
+
 // ui::TimeEdit::TimeEdit(uint8_t const ddbase, tm const &initial) :
 //     pm_ddbase(ddbase), m_time(initial), pm_runinit(true) {}
 
@@ -27,11 +30,12 @@ void ui::Main::ui_update()
     // c.exit_right = false;
     // c.wrap = false;
     // ui_spawn(new ui::NumberInputDecimal<uint16_t>(0, c, 0, 0));
-    tm time;
-    time.tm_hour = 12;
-    time.tm_min = 30;
-    time.tm_sec = 30;
-    ui_spawn(new ui::TimeEdit(0, time, false));
+    // tm time;
+    // time.tm_hour = 12;
+    // time.tm_min = 30;
+    // time.tm_sec = 30;
+    // ui_spawn(new ui::TimeEdit(0, time, false));
+    ui_spawn(new ui::Clock);
 }
 
 void ui::Main::ui_on_childComplete()
@@ -166,3 +170,59 @@ void ui::TimeEdit::ui_update()
     }
     pm_state = nextstate;
 }
+
+void ui::Clock::ui_update()
+{
+    namespace hd = libmodule::userio::hd;
+    auto nextstate = pm_state;
+    switch (pm_state) {
+    case State::None:
+        nextstate = State::ShowClock;
+        break;
+    case State::ShowClock:
+        if (ui_common->dpad.centre.get())
+            nextstate = State::EditTime;
+        break;
+    case State::EditTime:
+        nextstate = State::ShowClock;
+        break;
+    default: break;
+    }
+    
+
+    if (pm_state == State::None) {
+        ui_common->display << hd::instr::display_power << hd::display_power::cursor_off << hd::display_power::cursorblink_off << hd::display_power::display_on;
+        ui_common->display << hd::instr::entry_mode_set << hd::entry_mode_set::cursormove_right << hd::entry_mode_set::displayshift_disable;
+    }
+    if (pm_state == State::None || pm_previous_time != time(nullptr)) {
+        pm_previous_time = time(nullptr);
+        char buf[16 + 16 + 2];
+        snprintf_P(buf, sizeof buf, PSTR("Time:   %.8s\nDate: %.10s"), ui_common->now_isotime + 11, ui_common->now_isotime);
+        ui_common->display << hd::instr::return_home << buf;
+    }
+
+    if (nextstate != pm_state) {
+        switch (nextstate) {
+        case State::EditTime:
+            ui_spawn(new TimeEdit(8, ui_common->now_tm, true));
+            break;
+        default: break;
+        }
+    }
+
+    pm_state = nextstate;
+}
+
+void ui::Clock::ui_on_childComplete()
+{
+    switch (pm_state) {
+    case State::EditTime: {
+        auto &child_edit = *static_cast<ui::TimeEdit *>(ui_child);
+        rtc::write_time(mktime(&child_edit.m_time) + UNIX_OFFSET);
+        break;
+    }
+    default:
+        break;
+    }
+}
+
