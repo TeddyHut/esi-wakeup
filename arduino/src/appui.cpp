@@ -397,7 +397,7 @@ void ui::Status::on_visible_changed(bool const visible)
         namespace hd = libmodule::userio::hd;
         ui_common->display << hd::instr::display_power << hd::display_power::cursor_off << hd::display_power::cursorblink_off << hd::display_power::display_on;
         ui_common->display << hd::instr::entry_mode_set << hd::entry_mode_set::cursormove_right << hd::entry_mode_set::displayshift_disable;
-print_enabled();
+        print_enabled();
         print_tiptime();
     }
 }
@@ -405,7 +405,7 @@ print_enabled();
 void ui::Status::print_enabled()
 {
     namespace hd = libmodule::userio::hd;
-        ui_common->display << hd::instr::return_home
+    ui_common->display << hd::instr::return_home
         << (config::settings.alarm_enabled ? "Enabled " : "Disabled") << "        ";
 }
 
@@ -447,7 +447,7 @@ void ui::WeightThreshold::ui_update()
     char buf[16 + 16 + 2];
     snprintf_P(buf, sizeof buf, PSTR("Thresh:   %3d kg\nWeight:   %3d kg"),
         config::settings.weight_threshold, ui_common->measured_weight);
-    }
+}
 
 void ui::WeightThreshold::ui_on_childComplete()
 {

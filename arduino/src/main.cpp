@@ -6,6 +6,7 @@
 
 #include "appui.h"
 #include "sensors.h"
+#include "common.h"
 
 namespace {
     libmodule::userio::IC_HD44780 *display = nullptr;
@@ -44,6 +45,9 @@ void setup() {
     digitalWrite(LED_BUILTIN, false);
     pinMode(10, OUTPUT);
     digitalWrite(10, true);
+
+    // Read previous settings from EEPROM
+    config::settings.load();
 
     // Setup Dpad
     DFDpad dfdpad;
@@ -88,11 +92,18 @@ void setup() {
     RtcDS1302 rtc(rtc_wire);
     rtc::setup_rtc(rtc);
 
+    // Setup weight sensor
+    BedPresenceWeight presence(A4, A5);
+
     // Setup UI
     tm now_tm;
     char now_isotime[sizeof("2013-03-23 01:03:52")];
-    ui::Common ui_common{display, dpad, now_tm, now_isotime};
+    ui::Common ui_common{display, dpad, now_tm, now_isotime, 0};
     ui::Main ui_main(&ui_common);
+
+    // Setup alarm
+    alarm::Alarm alarm(config::settings, actuators::servotipper, presence);
+    alarm::alarm = &alarm;
 
     // Setup main loop timer
     libmodule::Timer1k main_timer;
@@ -123,7 +134,11 @@ void setup() {
         auto now = time(nullptr);
         localtime_r(&now, &now_tm);
         isotime_r(&now_tm, now_isotime);
+        presence.cycle_read();
+        // todo: make this a separate cycle sensor in sensors to that loadcell is not quieried twice
+        ui_common.measured_weight = presence.loadcell.get_units(1);
 
+        alarm.update();
         ui_main.update();
 
         using namespace libmodule::userio::hd;
