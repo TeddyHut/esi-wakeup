@@ -57,3 +57,23 @@ void rtc::write_time(time_t const time) {
     datetime.InitWithUnix32Time(time);
     ds1302->SetDateTime(datetime);
 }
+
+BedPresenceWeight::BedPresenceWeight(int pin_dout, int pin_sck)
+{
+    loadcell.begin(pin_dout, pin_sck);
+    check_loadcell_present();
+    loadcell.set_scale(config::settings.loadcell_divider);
+    loadcell.tare();
+}
+
+bool BedPresenceWeight::get_sensor_value()
+{
+    check_loadcell_present();
+    return loadcell.get_units(1) > config::settings.weight_threshold;
+}
+
+void BedPresenceWeight::check_loadcell_present()
+{
+    if (!loadcell.wait_ready_timeout(1000))
+        libmodule::hw::panic("No load cells");
+}
