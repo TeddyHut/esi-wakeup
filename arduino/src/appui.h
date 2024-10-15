@@ -3,6 +3,8 @@
 #include <libmodule.h>
 #include <time.h>
 
+#include "alarm.h"
+
 namespace ui
 {
     using libmodule::ui::Screen;
@@ -56,7 +58,7 @@ namespace ui
      *  down: Previous screen
      *  
      */
-    /* Wnat: if list item spawns child then don't call list item ui_update for that itme. So should call ui_management_update of list items from screenlist. When an element is focused up/down no longer navigate until focus released.*/
+    /* Want: if list item spawns child then don't call list item ui_update for that itme. So should call ui_management_update of list items from screenlist. When an element is focused up/down no longer navigate until focus released.*/
     class ScreenList : public Screen<Common>, public FocusManager {
     public:
         // Todo: Add vector size as optional constructor parameter so it can be sized correctly on creation
@@ -172,7 +174,18 @@ namespace ui
     public:
         Status(FocusManager *focus_parent);
     protected:
+void ui_update() override;
+        void ui_on_childComplete() override;
         void on_visible_changed(bool const visible) override;
+private:
+        enum class State : uint8_t {
+            Idle,
+            EditEnabled,
+            EditTime,
+        } pm_state = State::Idle;
+        
+        void print_enabled();
+        void print_tiptime();
     };
 
     class Clock : public FocusScreen

@@ -346,13 +346,67 @@ ui::Status::Status(FocusManager *focus_parent) : FocusScreen(focus_parent)
 {
 }
 
+void ui::Status::ui_update()
+{
+    namespace hd = libmodule::userio::hd;
+
+    if (!is_visible())
+        return;
+    
+    auto ns = pm_state;
+    switch(pm_state) {
+    case State::Idle:
+        if (ui_common->dpad.centre.get()) {
+            ns = State::EditEnabled;
+            ui_common->display << hd::instr::display_power << hd::display_power::cursor_on << hd::display_power::cursorblink_on << hd::display_power::display_on;
+            print_enabled();
+        }
+        break;
+    case State::EditEnabled:
+        if (ui_common->dpad.up.get() || ui_common->dpad.down.get()) {
+            config::settings.alarm_enabled ^= 1;
+            print_enabled();
+        }
+        if (ui_common->dpad.centre.get()) {
+            ns = State::EditTime;
+            auto alarm_time_tm = tm_t(config::settings.alarm_time);
+            ui_spawn(new TimeEdit(8, alarm_time_tm, true));
+        }
+        break;
+    case State::EditTime:
+        // this means we have come back from an edittime - but we have already set the value in on_childcomplete
+        config::settings.save();
+        release_focus();
+        ns = State::Idle;
+        break;
+    default: break;
+    }
+
+    pm_state = ns;
+}
+
+void ui::Status::ui_on_childComplete()
+{
+    // Should call operator time_t() of tm_t
+    config::settings.alarm_time = tm_t(static_cast<TimeEdit *>(ui_child)->m_time);
+}
+
 void ui::Status::on_visible_changed(bool const visible)
 {
     if (visible) {
         namespace hd = libmodule::userio::hd;
         ui_common->display << hd::instr::display_power << hd::display_power::cursor_off << hd::display_power::cursorblink_off << hd::display_power::display_on;
         ui_common->display << hd::instr::entry_mode_set << hd::entry_mode_set::cursormove_right << hd::entry_mode_set::displayshift_disable;
-        ui_common->display << hd::instr::return_home << "Enabled             ";
+print_enabled();
+        print_tiptime();
+    }
+}
+
+void ui::Status::print_enabled()
+{
+    namespace hd = libmodule::userio::hd;
+        ui_common->display << hd::instr::return_home
+        << (config::settings.alarm_enabled ? "Enabled " : "Disabled") << "        ";
 }
 
 void ui::Status::print_tiptime()
