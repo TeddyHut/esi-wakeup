@@ -39,9 +39,11 @@ void ui::Main::ui_update()
     auto screenlist = new ui::ScreenList(true);
     auto status = new ui::Status(screenlist);
     auto clock = new ui::Clock(screenlist);
-    screenlist->m_screens.resize(2);
+    auto weightthreshold = new ui::WeightThreshold(screenlist);
+    screenlist->m_screens.resize(3);
     screenlist->m_screens[0] = status;
     screenlist->m_screens[1] = clock;
+    screenlist->m_screens[2] = weightthreshold;
     ui_spawn(screenlist);
 }
 
@@ -350,6 +352,52 @@ void ui::Status::on_visible_changed(bool const visible)
         namespace hd = libmodule::userio::hd;
         ui_common->display << hd::instr::display_power << hd::display_power::cursor_off << hd::display_power::cursorblink_off << hd::display_power::display_on;
         ui_common->display << hd::instr::entry_mode_set << hd::entry_mode_set::cursormove_right << hd::entry_mode_set::displayshift_disable;
-        ui_common->display << hd::instr::return_home << "Enabled         \nTip at: 00:00:00";
+        ui_common->display << hd::instr::return_home << "Enabled             ";
+}
+
+void ui::Status::print_tiptime()
+{
+    namespace hd = libmodule::userio::hd;
+    char buf[16 + 1];
+    auto next_alarm_tm = alarm::alarm->get_next_alarm_tm();
+    snprintf_P(buf, sizeof buf, PSTR("Tip at: %2d:%2d:%2d"),
+        next_alarm_tm.tm_hour,
+        next_alarm_tm.tm_mday,
+        next_alarm_tm.tm_sec);
+    ui_common->display << hd::instr::set_ddram_addr << 0x40 << buf;
+}
+
+ui::WeightThreshold::WeightThreshold(FocusManager *focus_parent) : FocusScreen(focus_parent)
+{
+}
+
+void ui::WeightThreshold::ui_update()
+{
+    if (!is_visible())
+        return;
+    
+    if (ui_common->dpad.centre.get()) {
+        pull_focus();
+        WeightEdit_t::Config c;
+        c.min = 0;
+        c.max = 200;
+        c.sig10 = 0;
+        c.width = 3;
+        c.left_pad = ' ';
+        c.exit_left = false;
+        c.exit_right = false;
+        c.blink_cursor = true;
+        ui_spawn(new WeightEdit_t(11, c, config::settings.weight_threshold, 0));
     }
+
+    char buf[16 + 16 + 2];
+    snprintf_P(buf, sizeof buf, PSTR("Thresh:   %3d kg\nWeight:   %3d kg"),
+        config::settings.weight_threshold, ui_common->measured_weight);
+    }
+
+void ui::WeightThreshold::ui_on_childComplete()
+{
+    release_focus();
+    config::settings.weight_threshold = static_cast<WeightEdit_t *>(ui_child)->m_value;
+    config::settings.save();
 }

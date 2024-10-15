@@ -13,6 +13,7 @@ namespace ui
         libmodule::ui::Dpad &dpad;
         tm &now_tm;
         const char *now_isotime;
+        weight_t measured_weight;
     };
 
     class FocusElement;
@@ -193,6 +194,15 @@ namespace ui
         } pm_state = State::None;
         // Used to check if need to re-write the time/date to the display
         time_t pm_previous_time;
+    };
+
+    class WeightThreshold : public FocusScreen {
+        using WeightEdit_t = NumberInputDecimal<uint16_t>;
+    public:
+        WeightThreshold(FocusManager *focus_parent);
+    protected:
+        void ui_update() override;
+        void ui_on_childComplete() override;
     };
 
     /* Top-level Screen
