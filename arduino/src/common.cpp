@@ -21,3 +21,18 @@ tm_t::operator time_t() const
 {
     return mk_gmtime(this) + UNIX_OFFSET;
 }
+
+config::Settings config::settings;
+
+void config::Settings::save() const
+{
+    EEPROM.put(0, *this);
+}
+
+void config::Settings::load()
+{
+    Settings candidate_settings;
+    EEPROM.get(0, candidate_settings);
+    if (candidate_settings.write_indicator == 0x5e)
+        *this = candidate_settings;
+}
