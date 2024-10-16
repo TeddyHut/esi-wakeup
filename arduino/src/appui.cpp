@@ -424,7 +424,7 @@ void ui::Status::print_tiptime()
     namespace hd = libmodule::userio::hd;
     char buf[16 + 1];
     auto next_alarm_tm = alarm::alarm->get_next_alarm_tm();
-    snprintf_P(buf, sizeof buf, PSTR("Tip at: %2d:%2d:%2d"),
+    snprintf_P(buf, sizeof buf, PSTR("Tip at: %02hhd:%02hhd:%02hhd"),
         next_alarm_tm.tm_hour,
         next_alarm_tm.tm_mday,
         next_alarm_tm.tm_sec);
