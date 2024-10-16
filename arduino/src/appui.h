@@ -70,7 +70,7 @@ namespace ui
         struct {
             uint8_t index;
             bool focused;
-        } pm_childstate{0, false};
+        } pm_childstate{UINT8_MAX, false}; // for now use MAX to determine if to initialise
         // Whether to delete elements of m_screens when finished
         bool const pm_delete_screens : 1;
 
@@ -196,8 +196,6 @@ private:
         void ui_update() override;
         void ui_on_childComplete() override;
         void on_visible_changed(bool const visible) override;
-
-    
     private:
         enum class State : uint8_t {
             None,

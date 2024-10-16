@@ -273,23 +273,29 @@ void ui::ScreenList::ui_update()
         }
         ui_finish();
     }
-    auto old_child_index = pm_childstate.index;
-    if (ui_common->dpad.up.get()) {
-        pm_childstate.index = (pm_childstate.index == 0 ?  m_screens.size() : pm_childstate.index) - 1;
+    if (pm_childstate.index == UINT8_MAX) {
+        pm_childstate.index = 0;
+        m_screens[0]->on_visible_changed(true);
     }
-    if (ui_common->dpad.down.get()) {
-        if(++pm_childstate.index == m_screens.size())
-            pm_childstate.index = 0;
-    }
-    if (old_child_index != pm_childstate.index) {
-        m_screens[old_child_index]->on_visible_changed(false);
-        m_screens[pm_childstate.index]->on_visible_changed(true);
+    else {
+        auto old_child_index = pm_childstate.index;
+        if (ui_common->dpad.up.get()) {
+            pm_childstate.index = (pm_childstate.index == 0 ?  m_screens.size() : pm_childstate.index) - 1;
+        }
+        if (ui_common->dpad.down.get()) {
+            if(++pm_childstate.index == m_screens.size())
+                pm_childstate.index = 0;
+        }
+        if (old_child_index != pm_childstate.index) {
+            m_screens[old_child_index]->on_visible_changed(false);
+            m_screens[pm_childstate.index]->on_visible_changed(true);
+        }
     }
 }
 
 bool ui::ScreenList::is_child_visible(FocusElement const *child) const
 {
-    return child == m_screens[pm_childstate.index];
+    return pm_childstate.index != UINT8_MAX && child == m_screens[pm_childstate.index];
 }
 
 bool ui::ScreenList::is_child_focused(FocusElement const *child) const
@@ -427,6 +433,7 @@ ui::WeightThreshold::WeightThreshold(FocusManager *focus_parent) : FocusScreen(f
 
 void ui::WeightThreshold::ui_update()
 {
+    namespace hd = libmodule::userio::hd;
     if (!is_visible())
         return;
     
@@ -447,6 +454,7 @@ void ui::WeightThreshold::ui_update()
     char buf[16 + 16 + 2];
     snprintf_P(buf, sizeof buf, PSTR("Thresh:   %3d kg\nWeight:   %3d kg"),
         config::settings.weight_threshold, ui_common->measured_weight);
+    ui_common->display << hd::instr::return_home << buf;
 }
 
 void ui::WeightThreshold::ui_on_childComplete()
