@@ -93,16 +93,30 @@ void setup() {
     rtc::setup_rtc(rtc);
 
     // Setup weight sensor
-    BedPresenceWeight presence(A4, A5);
+    // BedPresenceWeight presence(A4, A5);
+    weight_t most_recent_weight = 0;
+    struct BedPresence : public libmodule::utility::Input<bool>
+    {
+        weight_t &most_recent_weight;
+        BedPresence(weight_t &weight) : most_recent_weight(weight) {}
+        bool get() const override { return most_recent_weight > config::settings.weight_threshold; }
+    } bed_presence{most_recent_weight};
+
+    HX711 loadcell;
+    loadcell.begin(A4, A5); // DOUT, SCK
+    if (!loadcell.wait_ready_timeout(1000))
+        libmodule::hw::panic("No HX711");
+    loadcell.set_scale(config::settings.loadcell_divider);
+    loadcell.tare();
 
     // Setup UI
     tm now_tm;
     char now_isotime[sizeof("2013-03-23 01:03:52")];
-    ui::Common ui_common{display, dpad, now_tm, now_isotime, 0};
+    ui::Common ui_common{display, dpad, now_tm, now_isotime, most_recent_weight};
     ui::Main ui_main(&ui_common);
 
     // Setup alarm
-    alarm::Alarm alarm(config::settings, actuators::servotipper, presence);
+    alarm::Alarm alarm(config::settings, actuators::servotipper, bed_presence);
     alarm::alarm = &alarm;
 
     // Setup main loop timer
@@ -110,9 +124,9 @@ void setup() {
 	main_timer.finished = true;
 	main_timer.start();
 
+    time_t previous_rtc_time = 0;
     // Start timers
     libmodule::time::start_timer_daemons<1000>();
-
     static constexpr auto refresh_rate_hz = 60;
     while (true) {
         if (!main_timer) {
@@ -134,9 +148,12 @@ void setup() {
         auto now = time(nullptr);
         localtime_r(&now, &now_tm);
         isotime_r(&now_tm, now_isotime);
-        presence.cycle_read();
-        // todo: make this a separate cycle sensor in sensors to that loadcell is not quieried twice
-        ui_common.measured_weight = presence.loadcell.get_units(1);
+        
+        // Update the weight once every second
+        if (now != previous_rtc_time) {
+            previous_rtc_time = now;
+            // most_recent_weight = loadcell.get_units(5);
+        }
 
         alarm.update();
         ui_main.update();

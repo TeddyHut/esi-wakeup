@@ -15,7 +15,7 @@ namespace ui
         libmodule::ui::Dpad &dpad;
         tm &now_tm;
         const char *now_isotime;
-        weight_t measured_weight;
+        weight_t &measured_weight;
     };
 
     class FocusElement;

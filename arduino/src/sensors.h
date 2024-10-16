@@ -31,15 +31,6 @@ protected:
 
 using DigiSensor_t = CycleSensor<bool>;
 
-struct BedPresenceWeight : public DigiSensor_t {
-    BedPresenceWeight(int pin_dout, int pin_sck);
-    HX711 loadcell;
-protected:
-    bool get_sensor_value() override;
-private:
-    void check_loadcell_present();
-};
-
 struct DFDpad {
     enum Button : uint8_t {
         None, Left, Right, Up, Down, Centre
