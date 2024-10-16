@@ -362,22 +362,24 @@ void ui::Status::ui_update()
     auto ns = pm_state;
     switch(pm_state) {
     case State::Idle:
-        if (ui_common->dpad.centre.get()) {
-            ns = State::EditEnabled;
-            ui_common->display << hd::instr::display_power << hd::display_power::cursor_on << hd::display_power::cursorblink_on << hd::display_power::display_on;
+        if (!ui_common->dpad.centre.get())
+            break;
+        ns = State::EditEnabled;
+        pull_focus();
+        ui_common->display << hd::instr::display_power << hd::display_power::cursor_on << hd::display_power::cursorblink_on << hd::display_power::display_on;
+        [[fallthrough]];
+    case State::EditEnabled: {
+        bool const toggle = ui_common->dpad.up.get() || ui_common->dpad.down.get();
+        if (toggle || pm_state == State::Idle) {
+            config::settings.alarm_enabled ^= toggle;
             print_enabled();
+            ui_common->display << hd::instr::set_ddram_addr << 15;
         }
-        break;
-    case State::EditEnabled:
-        if (ui_common->dpad.up.get() || ui_common->dpad.down.get()) {
-            config::settings.alarm_enabled ^= 1;
-            print_enabled();
-        }
-        if (ui_common->dpad.centre.get()) {
+        else if (ui_common->dpad.centre.get()) {
             ns = State::EditTime;
             auto alarm_time_tm = tm_t(config::settings.alarm_time);
-            ui_spawn(new TimeEdit(8, alarm_time_tm, true));
-        }
+            ui_spawn(new TimeEdit(0x40 + 8, alarm_time_tm, true));
+        }}
         break;
     case State::EditTime:
         // this means we have come back from an edittime - but we have already set the value in on_childcomplete
@@ -393,8 +395,10 @@ void ui::Status::ui_update()
 
 void ui::Status::ui_on_childComplete()
 {
+    namespace hd = libmodule::userio::hd;
     // Should call operator time_t() of tm_t
     config::settings.alarm_time = tm_t(static_cast<TimeEdit *>(ui_child)->m_time);
+    ui_common->display << hd::instr::display_power << hd::display_power::cursor_off << hd::display_power::cursorblink_off << hd::display_power::display_on;
 }
 
 void ui::Status::on_visible_changed(bool const visible)
@@ -412,7 +416,7 @@ void ui::Status::print_enabled()
 {
     namespace hd = libmodule::userio::hd;
     ui_common->display << hd::instr::return_home
-        << (config::settings.alarm_enabled ? "Enabled " : "Disabled") << "        ";
+        << (config::settings.alarm_enabled ? "Tip enabled " : "Tip disabled") << "        ";
 }
 
 void ui::Status::print_tiptime()
