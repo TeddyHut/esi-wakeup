@@ -146,6 +146,12 @@ void setup() {
         main_timer = 1000 / refresh_rate_hz;
         main_timer.start();
 
+        // Read from load cells when a result is ready
+        if (loadcell.wait_ready_timeout(1000 / (refresh_rate_hz * 2))) {
+            Serial.println(loadcell.read());
+            most_recent_weight = loadcell.get_units(1);
+        }
+
         tipper.update();
 
         dfdpad.atod.cycle_read();
