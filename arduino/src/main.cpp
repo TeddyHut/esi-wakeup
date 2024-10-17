@@ -91,7 +91,12 @@ void setup() {
     actuators::PumpTipper tipper(A4);
     
     // Setup RTC
-    ThreeWire rtc_wire(A2, A1, A3);
+    // Power the RTC
+    pinMode(12, OUTPUT);
+    pinMode(13, OUTPUT);
+    digitalWrite(12, false);
+    digitalWrite(13, true);
+    ThreeWire rtc_wire(3, 11, 2);//A2, A1, A3); Io, CLK, CE
     RtcDS1302 rtc(rtc_wire);
     rtc::setup_rtc(rtc);
 
@@ -108,8 +113,12 @@ void setup() {
         }
     } bed_presence{most_recent_weight};
 
+    // Power the HX711
+    pinMode(A3, OUTPUT);
+    digitalWrite(A3, true);
+
     HX711 loadcell;
-    loadcell.begin(A4, A5); // DOUT, SCK
+    loadcell.begin(A1, A2); // DOUT, SCK
     if (!loadcell.wait_ready_timeout(1000))
         libmodule::hw::panic();
         // libmodule::hw::panic("No HX711");
