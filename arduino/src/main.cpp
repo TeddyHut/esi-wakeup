@@ -54,7 +54,7 @@ void setup() {
     libmodule::ui::Dpad dpad;
     libmodule::userio::RapidInput3L1k::Level rapidinput_level_0 = {500, 250};
 	libmodule::userio::RapidInput3L1k::Level rapidinput_level_1 = {1500, 100};
-	libmodule::userio::RapidInput3L1k::Level rapidinput_level_2 = {4000, 35};
+	libmodule::userio::RapidInput3L1k::Level rapidinput_level_2 = {UINT16_MAX, 50};
 	dpad.set_rapidInputLevel(0, rapidinput_level_0);
 	dpad.set_rapidInputLevel(1, rapidinput_level_1);
 	dpad.set_rapidInputLevel(2, rapidinput_level_2);

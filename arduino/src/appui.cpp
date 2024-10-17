@@ -344,7 +344,7 @@ ui::FocusElement::FocusElement(FocusManager *parent) : parent(parent)
 {
 }
 
-ui::FocusScreen::FocusScreen(FocusManager *parent) : FocusElement(parent)
+ui::FocusScreen::FocusScreen(FocusManager *parent) : Screen(), FocusElement(parent)
 {
 }
 
@@ -434,6 +434,8 @@ void ui::Status::print_tiptime()
 
 ui::WeightThreshold::WeightThreshold(FocusManager *focus_parent) : FocusScreen(focus_parent)
 {
+    ui_child = nullptr;
+    ui_finished = false;
 }
 
 void ui::WeightThreshold::ui_update()

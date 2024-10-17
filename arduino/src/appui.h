@@ -15,7 +15,7 @@ namespace ui
         libmodule::ui::Dpad &dpad;
         tm &now_tm;
         const char *now_isotime;
-        weight_t &measured_weight;
+        weight_t const &measured_weight;
     };
 
     class FocusElement;
@@ -48,6 +48,8 @@ namespace ui
     };
 
     class FocusScreen : public Screen<Common>, public FocusElement {
+    public:
+        virtual ~FocusScreen() = default;
     protected:
         FocusScreen(FocusManager *parent);
     };
@@ -175,7 +177,6 @@ namespace ui
         Status(FocusManager *focus_parent);
     protected:
 void ui_update() override;
-        void ui_on_childComplete() override;
         void on_visible_changed(bool const visible) override;
 private:
         enum class State : uint8_t {
@@ -237,13 +238,16 @@ private:
 
 template <typename T>
 ui::NumberInputDecimal<T>::NumberInputDecimal(uint8_t const ddbase, Config const &config, T const default_value, uint8_t const default_cursor_sig)
-    : m_value(default_value),
+    : Screen(),
+      m_value(default_value),
       pm_cursor_sig(default_cursor_sig),
       pm_max_sig(log10i<T>(config.max)),
       pm_ddbase(ddbase),
       pm_config(config),
       pm_runinit(true)
-{}
+{
+    ui_finished = false;
+}
 
 template <typename T>
 void ui::NumberInputDecimal<T>::ui_update() {
