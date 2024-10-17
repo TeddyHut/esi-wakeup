@@ -186,6 +186,9 @@ private:
         
         void print_enabled();
         void print_tiptime();
+
+        uint8_t mem_timeedit[sizeof(TimeEdit)];
+
     };
 
     class Clock : public FocusScreen
@@ -214,6 +217,8 @@ private:
     protected:
         void ui_update() override;
         void ui_on_childComplete() override;
+    private:
+        uint8_t mem_weighttedit[sizeof(WeightEdit_t)];
     };
 
     /* Top-level Screen

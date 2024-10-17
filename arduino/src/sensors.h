@@ -65,7 +65,7 @@ void rtc::setup_rtc(RtcDS1302<wire_t> &Rtc)
     ds1302 = &Rtc;
     // From https://github.com/Makuna/Rtc/blob/master/examples/DS1302_Simple/DS1302_Simple.ino
 
-    Serial.print("compiled: ");
+    Serial.print(F("compiled: "));
     Serial.print(__DATE__);
     Serial.println(__TIME__);
 
@@ -80,35 +80,35 @@ void rtc::setup_rtc(RtcDS1302<wire_t> &Rtc)
         //    1) first time you ran and the device wasn't running yet
         //    2) the battery on the device is low or even missing
 
-        Serial.println("RTC lost confidence in the DateTime!");
+        Serial.println(F("RTC lost confidence in the DateTime!"));
         Rtc.SetDateTime(compiled);
     }
 
     if (Rtc.GetIsWriteProtected())
     {
-        Serial.println("RTC was write protected, enabling writing now");
+        Serial.println(F("RTC was write protected, enabling writing now"));
         Rtc.SetIsWriteProtected(false);
     }
 
     if (!Rtc.GetIsRunning())
     {
-        Serial.println("RTC was not actively running, starting now");
+        Serial.println(F("RTC was not actively running, starting now"));
         Rtc.SetIsRunning(true);
     }
 
     RtcDateTime now = Rtc.GetDateTime();
     if (now < compiled) 
     {
-        Serial.println("RTC is older than compile time!  (Updating DateTime)");
+        Serial.println(F("RTC is older than compile time!  (Updating DateTime)"));
         Rtc.SetDateTime(compiled);
     }
     else if (now > compiled) 
     {
-        Serial.println("RTC is newer than compile time. (this is expected)");
+        Serial.println(F("RTC is newer than compile time. (this is expected)"));
     }
     else if (now == compiled) 
     {
-        Serial.println("RTC is the same as compile time! (not expected but all is fine)");
+        Serial.println(F("RTC is the same as compile time! (not expected but all is fine)"));
     }
 
     Rtc.SetDateTime(compiled);

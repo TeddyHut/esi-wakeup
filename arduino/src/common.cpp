@@ -1,6 +1,9 @@
 #include "common.h"
 
 #include <EEPROM.h>
+#include <stdio.h>
+#include <avr/pgmspace.h>
+#include <Arduino.h>
 
 tm_t::tm_t()
 {
@@ -19,7 +22,15 @@ tm_t::tm_t(time_t const time)
 
 tm_t::operator time_t() const
 {
-    return mk_gmtime(this) + UNIX_OFFSET;
+    return mk_gmtime(this); //+ UNIX_OFFSET;
+}
+
+void tm_t::print() const
+{
+    char buf[sizeof("hh:mm:ss")];
+    snprintf_P(buf, sizeof buf, PSTR("%02hhd:%02hhd:%02hhd"),
+        tm_hour, tm_min, tm_sec);
+    Serial.print(buf);
 }
 
 config::Settings config::settings;

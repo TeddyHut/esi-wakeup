@@ -378,27 +378,25 @@ void ui::Status::ui_update()
         else if (ui_common->dpad.centre.get()) {
             ns = State::EditTime;
             auto alarm_time_tm = tm_t(config::settings.alarm_time);
-            ui_spawn(new TimeEdit(0x40 + 8, alarm_time_tm, true));
+            ui_spawn(new (mem_timeedit) TimeEdit(0x40 + 8, alarm_time_tm, true), false);
         }}
         break;
-    case State::EditTime:
+    case State::EditTime: {
+        // Should call operator time_t() of tm_t
+        auto timeedit = reinterpret_cast<TimeEdit *>(mem_timeedit);
+        config::settings.alarm_time = tm_t(timeedit->m_time);
+        timeedit->~TimeEdit();
+        ui_common->display << hd::instr::display_power << hd::display_power::cursor_off << hd::display_power::cursorblink_off << hd::display_power::display_on;
         // this means we have come back from an edittime - but we have already set the value in on_childcomplete
         config::settings.save();
         release_focus();
         ns = State::Idle;
         break;
+    }
     default: break;
     }
 
     pm_state = ns;
-}
-
-void ui::Status::ui_on_childComplete()
-{
-    namespace hd = libmodule::userio::hd;
-    // Should call operator time_t() of tm_t
-    config::settings.alarm_time = tm_t(static_cast<TimeEdit *>(ui_child)->m_time);
-    ui_common->display << hd::instr::display_power << hd::display_power::cursor_off << hd::display_power::cursorblink_off << hd::display_power::display_on;
 }
 
 void ui::Status::on_visible_changed(bool const visible)
@@ -415,8 +413,11 @@ void ui::Status::on_visible_changed(bool const visible)
 void ui::Status::print_enabled()
 {
     namespace hd = libmodule::userio::hd;
-    ui_common->display << hd::instr::return_home
-        << (config::settings.alarm_enabled ? "Tip enabled " : "Tip disabled") << "        ";
+    char buf[16 + 1];
+    strncpy_P(buf,
+        config::settings.alarm_enabled ? PSTR("Tip enabled     ") : PSTR("Tip disabled    "),
+        sizeof buf);
+    ui_common->display << hd::instr::return_home << buf;
 }
 
 void ui::Status::print_tiptime()
@@ -437,6 +438,7 @@ ui::WeightThreshold::WeightThreshold(FocusManager *focus_parent) : FocusScreen(f
 
 void ui::WeightThreshold::ui_update()
 {
+    ui_child = nullptr;
     namespace hd = libmodule::userio::hd;
     if (!is_visible())
         return;
@@ -448,22 +450,35 @@ void ui::WeightThreshold::ui_update()
         c.max = 200;
         c.sig10 = 0;
         c.width = 3;
-        c.left_pad = ' ';
+        c.left_pad = '0';
         c.exit_left = false;
         c.exit_right = false;
         c.blink_cursor = true;
-        ui_spawn(new WeightEdit_t(11, c, config::settings.weight_threshold, 0));
+        c.wrap = false;
+        Serial.println("Y");
+        new (mem_weighttedit) WeightEdit_t(10, c, config::settings.weight_threshold, 0);
+        ui_spawn(reinterpret_cast<Screen *>(mem_weighttedit), false);
+        return;
     }
 
     char buf[16 + 16 + 2];
     snprintf_P(buf, sizeof buf, PSTR("Thresh:   %3d kg\nWeight:   %3d kg"),
-        config::settings.weight_threshold, ui_common->measured_weight);
+        static_cast<int16_t>(config::settings.weight_threshold),
+        static_cast<int16_t>(ui_common->measured_weight));
     ui_common->display << hd::instr::return_home << buf;
+
+    auto weightedit = reinterpret_cast<WeightEdit_t *>(mem_weighttedit);
+    if (is_focused() /*weightedit->ui_finished*/) {
+        auto res = weightedit->m_value;
+        Serial.println(res);
+        // weightedit->~WeightEdit_t();
+        release_focus();
+        config::settings.weight_threshold = res;
+        // config::settings.save();
+    }
 }
 
 void ui::WeightThreshold::ui_on_childComplete()
 {
-    release_focus();
-    config::settings.weight_threshold = static_cast<WeightEdit_t *>(ui_child)->m_value;
-    config::settings.save();
+
 }

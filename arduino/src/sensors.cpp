@@ -47,7 +47,7 @@ void rtc::update_from_rtc()
     auto now_datetime = ds1302->GetDateTime();
     auto now_unix = ds1302->GetDateTime().Unix32Time();
     if (!now_datetime.IsValid())
-        libmodule::hw::panic("DateTime.IsValid() false");
+        libmodule::hw::panic(/*"DateTime.IsValid() false"*/);
     if (now_unix != previous_time)
         set_system_time(now_unix - UNIX_OFFSET);
 }

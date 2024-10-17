@@ -4,7 +4,7 @@
 #include <time.h>
 
 using servo_position_t = uint16_t;
-using weight_t = float;
+using weight_t = int16_t;
 using timeofday_t = uint32_t; // number of seconds past midnight
 
 struct tm_t : public tm {
@@ -12,6 +12,7 @@ struct tm_t : public tm {
     tm_t(tm const &tm);
     tm_t(time_t const time);
     operator time_t() const;
+    void print() const;
 };
 
 namespace config {

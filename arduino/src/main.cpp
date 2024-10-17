@@ -111,7 +111,8 @@ void setup() {
     HX711 loadcell;
     loadcell.begin(A4, A5); // DOUT, SCK
     if (!loadcell.wait_ready_timeout(1000))
-        libmodule::hw::panic("No HX711");
+        libmodule::hw::panic();
+        // libmodule::hw::panic("No HX711");
     loadcell.set_scale(config::settings.loadcell_divider);
     loadcell.tare();
 
@@ -165,8 +166,8 @@ void setup() {
             previous_rtc_time = now;
         }
 
-        alarm.update();
         ui_main.update();
+        Serial.flush();
 
         using namespace libmodule::userio::hd;
 
