@@ -111,5 +111,5 @@ void rtc::setup_rtc(RtcDS1302<wire_t> &Rtc)
         Serial.println(F("RTC is the same as compile time! (not expected but all is fine)"));
     }
 
-    Rtc.SetDateTime(compiled);
+    // Rtc.SetDateTime(compiled);
 }
