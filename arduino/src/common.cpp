@@ -46,4 +46,8 @@ void config::Settings::load()
     EEPROM.get(0, candidate_settings);
     if (candidate_settings.write_indicator == 0x5e)
         *this = candidate_settings;
+    if (weight_threshold > 200 || weight_threshold < 0) {
+        weight_threshold = 50;
+        save();
+    } 
 }
