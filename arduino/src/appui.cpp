@@ -427,7 +427,7 @@ void ui::Status::print_tiptime()
     auto next_alarm_tm = alarm::alarm->get_next_alarm_tm();
     snprintf_P(buf, sizeof buf, PSTR("Tip at: %02hhd:%02hhd:%02hhd"),
         next_alarm_tm.tm_hour,
-        next_alarm_tm.tm_mday,
+        next_alarm_tm.tm_min,
         next_alarm_tm.tm_sec);
     ui_common->display << hd::instr::set_ddram_addr << 0x40 << buf;
 }
