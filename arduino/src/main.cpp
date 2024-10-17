@@ -102,7 +102,10 @@ void setup() {
     {
         weight_t &most_recent_weight;
         BedPresence(weight_t &weight) : most_recent_weight(weight) {}
-        bool get() const override { return most_recent_weight > config::settings.weight_threshold; }
+        bool get() const override {
+            // return true;
+            return most_recent_weight > config::settings.weight_threshold;
+        }
     } bed_presence{most_recent_weight};
 
     HX711 loadcell;
@@ -156,10 +159,10 @@ void setup() {
         localtime_r(&now, &now_tm);
         isotime_r(&now_tm, now_isotime);
         
-        // Update the weight once every second
+        // Update alarm once every second
         if (now != previous_rtc_time) {
+            alarm.update(now);
             previous_rtc_time = now;
-            // most_recent_weight = loadcell.get_units(5);
         }
 
         alarm.update();

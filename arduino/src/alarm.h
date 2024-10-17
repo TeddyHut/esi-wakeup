@@ -10,7 +10,7 @@
 namespace alarm {
     class Alarm {
     public:
-        void update();
+        void update(time_t const now);
 
         time_t get_next_alarm_time() const;
         tm_t const &get_next_alarm_tm() const;

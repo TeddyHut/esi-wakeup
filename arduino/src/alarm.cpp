@@ -2,17 +2,19 @@
 
 alarm::Alarm *alarm::alarm = nullptr;
 
-void alarm::Alarm::update()
+void alarm::Alarm::update(time_t const now)
 {
     // If the previously determined next alarm time is now and still in bed
-    time_t now = time(nullptr);
-    if (now == pm_nextalarm_time && pr_in_bed.get()) {
+    if (now == pm_nextalarm_time && pr_in_bed.get() && pr_settings.alarm_enabled) {
         if (!pm_alarm_triggered)
             pr_tipper.set(true);
         pm_alarm_triggered = true;
         return;
     }
     pm_alarm_triggered = false;
+
+    if (!pr_in_bed.get())
+        pr_tipper.set(false);
 
     // Update next alarm time
     tm_t alarm_timeofday_tm;
