@@ -114,6 +114,7 @@ void setup() {
         libmodule::hw::panic();
         // libmodule::hw::panic("No HX711");
     loadcell.set_scale(config::settings.loadcell_divider);
+    loadcell.set_scale(-8220.0f);
     loadcell.tare();
 
     // Setup UI
