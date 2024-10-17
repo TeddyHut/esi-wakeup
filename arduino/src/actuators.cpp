@@ -1,30 +1,59 @@
 #include "actuators.h"
 
-void actuators::ServoTipper::set(bool const p)
+#include <Arduino.h>
+
+// void actuators::ServoTipper::set(bool const p)
+// {
+//     if (p) {
+//         servo.write(pr_settings.tip_position);
+//         pm_timer = 1000;
+//         tipped = true;
+//         pm_timer.start();
+//     }
+//     else {
+//         pm_timer.reset();
+//         tipped = false;
+//         servo.write(pr_settings.hold_position);
+//     }
+// }
+
+// void actuators::ServoTipper::update()
+// {
+//     if (tipped && pm_timer.finished)
+//         set(false);
+// }
+
+// actuators::ServoTipper::ServoTipper(int const pin, config::Settings const &settings) : pr_settings(settings)
+// {
+//     servo.attach(pin, 350, 2400);
+//     set(false);
+// }
+
+// actuators::ServoTipper actuators::servotipper(13, config::settings);
+
+void actuators::PumpTipper::set(bool const tip)
 {
-    if (p) {
-        servo.write(pr_settings.tip_position);
-        pm_timer = 1000;
+    if (tip) {
+        digitalWrite(pin, true);
+        pm_timer = 60U * 1000U; // run pump for 1 minute
         tipped = true;
         pm_timer.start();
     }
     else {
-        pm_timer.reset();
+        digitalWrite(pin, false);
         tipped = false;
-        servo.write(pr_settings.hold_position);
+        pm_timer.reset();
     }
 }
 
-void actuators::ServoTipper::update()
+void actuators::PumpTipper::update()
 {
     if (tipped && pm_timer.finished)
         set(false);
 }
 
-actuators::ServoTipper::ServoTipper(int const pin, config::Settings const &settings) : pr_settings(settings)
+actuators::PumpTipper::PumpTipper(int const pin) : pin(pin), tipped(false)
 {
-    servo.attach(pin, 350, 2400);
+    pinMode(pin, OUTPUT);
     set(false);
 }
-
-actuators::ServoTipper actuators::servotipper(13, config::settings);

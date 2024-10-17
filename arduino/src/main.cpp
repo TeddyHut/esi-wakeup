@@ -86,6 +86,9 @@ void setup() {
     display << instr::display_power << display_power::cursor_off << display_power::cursorblink_off << display_power::display_on;
 
     display << instr::clear_display;
+
+    // Setup pump
+    actuators::PumpTipper tipper(A4);
     
     // Setup RTC
     ThreeWire rtc_wire(A2, A1, A3);
@@ -116,7 +119,7 @@ void setup() {
     ui::Main ui_main(&ui_common);
 
     // Setup alarm
-    alarm::Alarm alarm(config::settings, actuators::servotipper, bed_presence);
+    alarm::Alarm alarm(config::settings, tipper, bed_presence);
     alarm::alarm = &alarm;
 
     // Setup main loop timer
@@ -127,6 +130,8 @@ void setup() {
     time_t previous_rtc_time = 0;
     // Start timers
     libmodule::time::start_timer_daemons<1000>();
+
+    // tipper.set(true);
     static constexpr auto refresh_rate_hz = 60;
     while (true) {
         if (!main_timer) {
@@ -136,6 +141,8 @@ void setup() {
         main_timer.reset();
         main_timer = 1000 / refresh_rate_hz;
         main_timer.start();
+
+        tipper.update();
 
         dfdpad.atod.cycle_read();
         dpad.left.update();
